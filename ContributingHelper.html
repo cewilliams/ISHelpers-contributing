@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+        integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+  <link rel="stylesheet" href="helpers.css">
+
+  <title>Contributing Helper</title>
+  <script src="https://unpkg.com/react@latest/dist/react.js"></script>
+  <script src="https://unpkg.com/react-dom@latest/dist/react-dom.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+          integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+          crossorigin="anonymous"></script>
+
+  <script src="lib/marked.js"></script>
+
+  <script>
+
+    // Uses:
+    //        https://facebook.github.io/react/downloads/single-file-example.html
+    //        https://getbootstrap.com/
+    //        https://github.com/chjj/marked
+
+    var baseDoc = [];
+
+    baseDoc.push({
+      level:   1,
+      input:   "line",
+      text:    "System Name",
+      comment: "This is the name of your system"
+    });
+
+    baseDoc.push({
+      level:   0,
+      input:   "line",
+      text:    "Repository URL",
+      style: "url",
+      comment: "The main idea for the contributing file is to concisely describe to a contributor the commitments the team makes to anyone providing code to the system - host or guest."
+
+    });
+
+    baseDoc.push({
+      level: 2,
+      text:  "We're glad you are here"
+    });
+
+    baseDoc.push({
+      level:   0,
+      text:    "This document outlines the house rules that our team uses when making code contributions. If you want to start contributing to our project, please read through this document first.",
+      comment: "Having the team welcome contributors tells both the team and the contributors that contributing is not just possible but is an expected part of how a system grows and develops.\
+\
+      People are more likely to both read the rules and follow them if the team opens with a friendly greeting. When people feel like they are welcomed they will think beyond just their immediate conncerns and will be more likely to be aware of larger issues."
+    });
+
+
+    //    class FFInput extends React.Component {
+    //      constructor(props) {
+    //        // console.log('Created FFInput component');
+    //        super(props);
+    //      }
+    //
+    //      render() {
+    //        //console.log('FFInput-render called');
+    //        const value = this.props.value;
+    //
+    //        return React.createElement("textarea", {
+    //          onChange: this.props.onChange,
+    //          value:    value
+    //        });
+    //
+    //      }
+    //
+    //    }
+
+    class EditorStrip extends React.Component {
+      constructor(props) {
+        super(props);
+      }
+
+      render() {
+        // console.log("ES-render: [%s] %o", typeof(this.props.onChange), this.props.onChange);
+        const text = this.props.docText;
+        //const style   = this.props.editStyle;
+        //const level   = this.props.textLevel;
+        const comment = this.props.comment;
+        const id = this.props.id;
+        return React.createElement(
+            "div",
+            {className: "row"},
+            React.createElement(
+                "textarea",
+                {
+                  id:   id,
+                  name: id + "-inputText",
+                  onChange:     this.props.onChange,
+                  className:    "col-sm-5",
+                  defaultValue: text
+                }
+            ),
+            React.createElement(
+                "div",
+                {
+                  className: "col-sm-6 well col-sm-offset-1"
+                },
+                comment
+            )
+        );
+
+      }
+    }
+
+    class InteractiveEditor extends React.Component {
+      constructor(props) {
+        super(props);
+        this.handleChange = this.handleChange.bind(this);
+        //this.handleEdit   = this.handleEdit.bind(this);
+        // TODO: Load all properties into initial state
+        // TODO: update change handler to dereference another level
+        // TODO: update markdown converter to use level property
+        // TODO: Add URL type
+
+
+        this.state = {};
+        // console.log(marked('# Marked in browser\n\nRendered by **marked**.'));
+      }
+
+      componentWillMount() {
+        var docNodes  = {};
+        var docText   = '';
+        var nodeCount = 0;
+        var i;
+
+        for (i = 0; i < baseDoc.length; i = i + 1) {
+          docNodes[i] = baseDoc[i];
+          nodeCount   = nodeCount + 1;
+          // docText = docText + docNodes[i].text + "\n\n";
+        }
+
+        docText = this.convertNodesToMarkdown(docNodes, nodeCount);
+
+        this.state = {
+          docNodes:     docNodes,
+          docNodeCount: nodeCount,
+          docText:      docText
+        };
+
+      }
+
+      handleChange(e) {
+        // console.log('Main handleChange called');
+        const target = e.target;
+        const name   = target.name;
+        const value  = target.value;
+        const key    = target.key;
+        const id       = target.id;
+        // console.log("target name: %s, key: %s, id: %s, value: %s, target: %s", name, key, id, value, target);
+        // console.log("State: %o", this.state);
+
+        var docNodes      = this.state.docNodes;
+        docNodes[id].text = value;
+
+        var docText = this.convertNodesToMarkdown(docNodes, this.state.docNodeCount);
+
+        this.setState({
+          docNodes: docNodes,
+          docText:  docText
+        });
+      }
+
+      convertNodeToMarkdown(docNode) {
+        const header = '#####';
+        var prefix   = '';
+        var text     = docNode.text;
+
+        if (docNode.level) {
+          prefix = header.slice(0, docNode.level) + ' ';
+        }
+
+        if (docNode.style && docNode.style === 'url') {
+          text = '[' + text + '](' + text + ')';
+        }
+
+        return prefix + text + "\n\n";
+
+      }
+
+      convertNodesToMarkdown(docNodes, nodeCount) {
+        var i;
+        var tempText = '';
+
+        for (i = 0; i < nodeCount; i = i + 1) {
+          tempText = tempText + this.convertNodeToMarkdown(docNodes[i]);
+        }
+
+        return tempText;
+      }
+
+//      convertTextToMarkdown(docNodes) {
+//        var i;
+//        var
+//        for (i=0; i < this.state.docNodeCount; i = i + 1) {
+//
+//        }
+//
+//        return Object.values(textHash).join("\n");
+//      }
+
+      convertToHTML(markdownText) {
+        // console.log("convertToHTML hash: %o", markdownText);
+        return {__html: marked(markdownText)};
+      }
+
+      convertToMarkdown(markdownText) {
+        return {__html: "<pre>" + markdownText + "</pre>"}
+      }
+
+      render() {
+        var segments = [];
+        var i;
+
+        // console.log('Checking baseDoc array: %d', baseDoc.length)
+        for (i = 0; i < this.state.docNodeCount; i = i + 1) {
+          // console.log("Section %d level %d", i, baseDoc[i].level);
+          segments.push(React.createElement(
+              EditorStrip,
+              {
+                key:      i,
+                id: i,
+                onChange: this.handleChange,
+                docText: this.state.docNodes[i].text,
+                comment: this.state.docNodes[i].comment
+              }
+          ));
+        }
+
+        return React.createElement(
+            "div",
+            {className: "InteractiveEditorClass"},
+            segments,
+            React.createElement("div",
+                {className: "page-header"},
+                // React.createElement("h1", null, "Output"),
+                React.createElement("div",
+                    {className: "row"},
+                    React.createElement("div",
+                        {className: "col-sm-6"},
+                        React.createElement("div",
+                            {className: "panel panel-info"},
+                            React.createElement("div",
+                                {className: "panel-heading"},
+                                React.createElement("h4",
+                                    {
+                                      className: "panel-title"
+                                    },
+                                    "Preview"
+                                )
+                            ),
+                            React.createElement("div",
+                                {
+                                  className:               "panel-body",
+                                  dangerouslySetInnerHTML: this.convertToHTML(this.state.docText)
+                                }
+                            )
+                        )
+                    ),
+                    React.createElement("div",
+                        {className: "col-sm-5 col-offset-sm-1"},
+                        React.createElement("div",
+                            {className: "panel panel-info"},
+                            React.createElement("div",
+                                {className: "panel-heading"},
+                                React.createElement("h4",
+                                    {
+                                      className: "panel-title"
+                                    },
+                                    "Raw"
+                                )
+                            ),
+                            React.createElement("div",
+                                {
+                                  className:               "panel-body",
+                                  dangerouslySetInnerHTML: this.convertToMarkdown(this.state.docText)
+                                }
+                            )
+                    )
+                    )
+                )
+            )
+        );
+
+      }
+    }
+
+  </script>
+</head>
+<body style="width: 600px">
+
+<nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+              aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">Contributing Helper</a>
+    </div>
+    <!--<div id="navbar" class="navbar-collapse collapse">-->
+    <!--<ul class="nav navbar-nav">-->
+    <!--<li class="active"><a href="#">Home</a></li>-->
+    <!--</ul>-->
+    <!--</div>&lt;!&ndash;/.nav-collapse &ndash;&gt;-->
+  </div>
+</nav>
+
+<div id="root" class="container-fluid" role="main">
+
+<div id="editor" class="container"></div>
+
+</div>
+<script type="text/babel">
+
+  ReactDOM.render(React.createElement(InteractiveEditor, null), document.getElementById('editor'));
+
+</script>
+</body>
+</html>
